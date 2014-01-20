@@ -3,10 +3,10 @@ from django.db import models
 class Asignacion(models.Model):
     fe_asignacion = models.DateTimeField(blank=True, null=True)
     fe_modifica_asig = models.DateTimeField(blank=True, null=True)
-    co_asignado = models.ForeignKey('Usuarios', db_index=True)
+    co_asignado = models.ForeignKey('Usuarios', db_index=True, related_name='asignacion_co_asignado')
     co_tomo = models.ForeignKey('Tomos', db_column='co_tomo')
-    co_asignador = models.ForeignKey('Usuarios', db_index=True, related_name='co_asignador')
-    co_modificador = models.ForeignKey('Usuarios', db_index=True, blank=True, null=True, related_name='co_modificador')
+    co_asignador = models.ForeignKey('Usuarios', db_index=True, related_name='asignacion_co_asignador')
+    co_modificador = models.ForeignKey('Usuarios', db_index=True, blank=True, null=True, related_name='asignacion_co_modificador')
     class Meta:
         db_table = 'asignacion'
 
