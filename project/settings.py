@@ -36,7 +36,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'inei.auth'
+    'inei.auth',
+    'inei.planilla'
 )
 
 MIDDLEWARE_CLASSES = (
