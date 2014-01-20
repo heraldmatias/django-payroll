@@ -13,13 +13,13 @@ class EndesBackend(object):
     def authenticate(self, username=None, password=None):
         if username and password:
             try:
-                user = Usuarios.objects.get(username=username)
+                user = Usuarios.objects.get(cod_usu=username)
                 user.check_password(password)
             except Usuarios.DoesNotExist:
                 # Create a new user. Note that we can set password
                 # to anything, because it won't be checked; the password
                 # from settings.py will.
-                user = Usuarios(username=username, password=password)
+                user = Usuarios(cod_usu=username, pass_usu=password)
                 user.is_admin = False
                 user.save()
             return user
