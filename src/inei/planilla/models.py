@@ -1,12 +1,15 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.contrib.auth.hashers import (check_password, make_password, is_password_usable)
+from django.utils import timezone
 
 class Asignacion(models.Model):
     fe_asignacion = models.DateTimeField(blank=True, null=True)
     fe_modifica_asig = models.DateTimeField(blank=True, null=True)
-    co_asignado = models.ForeignKey('Usuarios', db_index=True, related_name='asignacion_co_asignado')
-    co_tomo = models.ForeignKey('Tomos', db_column='co_tomo')
-    co_asignador = models.ForeignKey('Usuarios', db_index=True, related_name='asignacion_co_asignador')
-    co_modificador = models.ForeignKey('Usuarios', db_index=True, blank=True, null=True, related_name='asignacion_co_modificador')
+    co_asignado = models.CharField(max_length=10)
+    co_tomo = models.CharField(max_length=10)
+    co_asignador = models.CharField(max_length=10)
+    co_modificador = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'asignacion'
 
@@ -40,30 +43,20 @@ class Conceptos(models.Model):
     sede_conc_tco = models.CharField(max_length=1, blank=True)
     fec_creac = models.DateTimeField(blank=True, null=True)
     fec_mod = models.DateTimeField(blank=True, null=True)
-    usu_crea = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='conceptos_usu_crea')
-    usu_mod = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='conceptos_usu_mod')
+    usu_crea = models.CharField(blank=True, null=True, max_length=10)
+    usu_mod = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'conceptos'
 
-class ConceptosEliminar(models.Model):
-    codi_conc_tco = models.CharField(max_length=5, blank=True)
-    class Meta:
-        
-        db_table = 'conceptos_eliminar'
 
 class ConceptosFolios(models.Model):
     id = models.IntegerField(primary_key=True)
     orden_conc_folio = models.IntegerField()
-    codi_folio = models.ForeignKey('Folios', db_index=True, blank=True, null=True)
-    codi_conc_tco = models.ForeignKey(Conceptos, db_index=True, blank=True, null=True)
+    codi_folio = models.CharField(blank=True, null=True, max_length=10)
+    codi_conc_tco = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'conceptos_folios'
 
-class ConceptosUsados(models.Model):
-    codi_conc_tco = models.CharField(max_length=5, blank=True)
-    class Meta:
-        
-        db_table = 'conceptos_usados'
 
 class ExcelTomo(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -73,8 +66,8 @@ class ExcelTomo(models.Model):
     created_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(blank=True, null=True)
     tomo = models.IntegerField(blank=True, null=True)
-    usu_crea = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='excel_usu_crea')
-    usu_mod = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='excel_usu_mod')
+    usu_crea = models.CharField(blank=True, null=True, max_length=10)
+    usu_mod = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'excel_tomo'
 
@@ -84,76 +77,14 @@ class Folios(models.Model):
     per_folio = models.CharField(max_length=100, blank=True)
     reg_folio = models.IntegerField(blank=True, null=True)
     subt_plan_stp = models.CharField(max_length=2, blank=True)
-    codi_tomo = models.ForeignKey('Tomos', db_index=True, blank=True, null=True)
-    tipo_plan_tpl = models.ForeignKey('Tplanilla', db_index=True, blank=True, null=True)
+    codi_tomo = models.CharField(blank=True, null=True, max_length=10)
+    tipo_plan_tpl = models.CharField(blank=True, null=True, max_length=10)
     fec_creac = models.DateTimeField(blank=True, null=True)
     fec_mod = models.DateTimeField(blank=True, null=True)
-    usu_crea = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='folios_usu_crea')
-    usu_mod = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='folios_usu_mod')
+    usu_crea = models.CharField(blank=True, null=True, max_length=10)
+    usu_mod = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'folios'
-
-class LvAcumuladosTomo(models.Model):
-    tomo = models.IntegerField(blank=True, null=True)
-    tregistros = models.DecimalField(blank=True, null=True, max_digits=20, decimal_places=2)
-    tdias = models.BigIntegerField(blank=True, null=True)
-    class Meta:
-        db_table = 'lv_acumulados_tomo'
-
-class LvAsignacion(models.Model):
-    fe_asignacion = models.DateTimeField(blank=True, null=True)
-    fe_modifica_asig = models.DateTimeField(blank=True, null=True)
-    tomo = models.IntegerField(blank=True, null=True)
-    digitador = models.CharField(max_length=25, blank=True)
-    co_asignado = models.IntegerField(blank=True, null=True)
-    asignador = models.CharField(max_length=25, blank=True)
-    asignadorcambio = models.CharField(max_length=25, blank=True)
-    class Meta:
-        db_table = 'lv_asignacion'
-
-class LvDatosTomo(models.Model):
-    tomo = models.IntegerField(blank=True, null=True)
-    folios = models.IntegerField(blank=True, null=True)
-    resumen = models.BigIntegerField(blank=True, null=True)
-    digitables = models.BigIntegerField(blank=True, null=True)
-    digitados = models.BigIntegerField(blank=True, null=True)
-    por_digitar = models.BigIntegerField(blank=True, null=True)
-    registros = models.BigIntegerField(blank=True, null=True)
-    estado = models.TextField(blank=True)
-    completo = models.NullBooleanField()
-    class Meta:
-        db_table = 'lv_datos_tomo'
-
-class LvPersonalCodigo(models.Model):
-    valo_calc_phi = models.CharField(max_length=150, blank=True)
-    codi_empl_per = models.CharField(max_length=100, blank=True)
-    class Meta:
-        db_table = 'lv_personal_codigo'
-
-class LvPersonalPlanillas(models.Model):
-    empleado = models.CharField(max_length=100, blank=True)
-    codigo = models.CharField(max_length=8, blank=True)
-    soundex = models.CharField(max_length=8, blank=True)
-    class Meta:
-        db_table = 'lv_personal_planillas'
-
-class LvPersonalPorNombre(models.Model):
-    codi_empl_per = models.CharField(max_length=100, blank=True)
-    class Meta:
-        db_table = 'lv_personal_por_nombre'
-
-class LvTomoAsignacion(models.Model):
-    tomo = models.IntegerField(blank=True, null=True)
-    folios = models.IntegerField(blank=True, null=True)
-    resumen = models.BigIntegerField(blank=True, null=True)
-    digitables = models.BigIntegerField(blank=True, null=True)
-    digitados = models.BigIntegerField(blank=True, null=True)
-    por_digitar = models.BigIntegerField(blank=True, null=True)
-    registros = models.BigIntegerField(blank=True, null=True)
-    estado = models.TextField(blank=True)
-    completo = models.NullBooleanField()
-    class Meta:
-        db_table = 'lv_tomo_asignacion'
 
 class MaestroPersonal(models.Model):
     codi_empl_per = models.CharField(primary_key=True, max_length=8)
@@ -310,8 +241,8 @@ class Planilla(models.Model):
     fec_creac = models.DateTimeField(blank=True, null=True)
     fec_mod = models.DateTimeField(blank=True, null=True)
     cant_reg = models.IntegerField(blank=True, null=True)
-    codi_folio = models.ForeignKey(Folios, db_index=True, blank=True, null=True)
-    codi_tomo = models.ForeignKey('Tomos', db_index=True, blank=True, null=True)
+    codi_folio = models.CharField(blank=True, null=True, max_length=10)
+    codi_tomo = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'planilla'
 
@@ -355,18 +286,6 @@ class PlanillaHistoricasLog(models.Model):
     class Meta:
         db_table = 'planilla_historicas_log'
 
-class PlanillaHistoricasSiga(models.Model):
-    id = models.IntegerField(primary_key=True)
-    ano_peri_tpe = models.CharField(max_length=30)
-    nume_peri_tpe = models.CharField(max_length=2)
-    valo_calc_phi = models.CharField(max_length=150)
-    tipo_plan_tpl = models.CharField(max_length=5, blank=True)
-    subt_plan_stp = models.CharField(max_length=2, blank=True)
-    codi_empl_per = models.CharField(max_length=100)
-    codi_conc_tco = models.ForeignKey(Conceptos, db_index=True)
-    codi_folio = models.ForeignKey(Folios, db_index=True, blank=True, null=True)
-    class Meta:
-        db_table = 'planilla_historicas_siga'
 
 class Roles(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -380,21 +299,14 @@ class Subtplanilla(models.Model):
     desc_subt_stp = models.CharField(max_length=40)
     titu_subt_stp = models.CharField(max_length=40, blank=True)
     observ = models.TextField(blank=True)
-    tipo_plan_tpl = models.ForeignKey('Tplanilla', db_index=True)
+    tipo_plan_tpl = models.CharField(max_length=10)
     fec_creac = models.DateTimeField(blank=True, null=True)
     fec_mod = models.DateTimeField(blank=True, null=True)
-    usu_crea = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='subtplanilla_usu_crea')
-    usu_mod = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='subtplanilla_usu_mod')
+    usu_crea = models.CharField(blank=True, null=True, max_length=10)
+    usu_mod = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'subtplanilla'
 
-class TmpConceptosFolios(models.Model):
-    id = models.IntegerField(primary_key=True, db_index=True)
-    orden_conc_folio = models.IntegerField(blank=True, null=True)
-    codi_folio = models.IntegerField(blank=True, null=True)
-    codi_conc_tco = models.CharField(max_length=5, blank=True)
-    class Meta:
-        db_table = 'tmp_conceptos_folios'
 
 class Tomos(models.Model):
     codi_tomo = models.IntegerField(primary_key=True)
@@ -404,8 +316,8 @@ class Tomos(models.Model):
     desc_tomo = models.TextField(blank=True)
     fec_creac = models.DateTimeField(blank=True, null=True)
     fec_mod = models.DateTimeField(blank=True, null=True)
-    usu_crea = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='tomos_usu_crea')
-    usu_mod = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='tomos_usu_mod')
+    usu_crea = models.CharField(blank=True, null=True, max_length=10)
+    usu_mod = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'tomos'
 
@@ -419,8 +331,8 @@ class Tplanilla(models.Model):
     abrev_tipo_tpl = models.CharField(max_length=10, blank=True)
     fec_creac = models.DateTimeField(blank=True, null=True)
     fec_mod = models.DateTimeField(blank=True, null=True)
-    usu_crea = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='tplanilla_usu_crea')
-    usu_mod = models.ForeignKey('Usuarios', blank=True, null=True, db_index=True, related_name='tplanilla_usu_mod')
+    usu_crea = models.CharField(blank=True, null=True, max_length=10)
+    usu_mod = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'tplanilla'
 
@@ -432,6 +344,82 @@ class Usuarios(models.Model):
     pass_usu = models.CharField(max_length=128)
     email_usu = models.CharField(max_length=60, blank=True)
     is_active = models.BooleanField()
+    last_login = models.DateTimeField(default=timezone.now)
+
+    def get_username(self):
+        "Return the identifying username for this User"
+        return getattr(self, self.cod_usu)
+
+    def __str__(self):
+        return self.get_username()
+
+    def natural_key(self):
+        return self.get_username()
+
+    def is_anonymous(self):
+        """
+        Always returns False. This is a way of comparing User objects to
+        anonymous users.
+        """
+        return False
+
+    def is_authenticated(self):
+        """
+        Always return True. This is a way to tell if the user has been
+        authenticated in templates.
+        """
+        return True
+
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        """
+        Returns a boolean of whether the raw_password was correct. Handles
+        hashing formats behind the scenes.
+        """
+        def setter(raw_password):
+
+            self.set_password(raw_password)
+            self.save(update_fields=["pass_usu"])
+
+        return make_password(raw_password, salt=self.salt_usu) == self.pass_usu
+
+    def set_unusable_password(self):
+        # Sets a value that will never be a valid hash
+        self.password = make_password(None)
+
+    def has_usable_password(self):
+        return is_password_usable(self.pass_usu)
+
+    def get_full_name(self):
+        # The user is identified by their username address
+        return u'%s' % (self.nom_comp_usu)
+
+    def get_short_name(self):
+        # The user is identified by their username address
+        return self.cod_usu
+
+    # On Python 3: def __str__(self):
+    def __unicode__(self):
+        return self.cod_usu
+
+    def has_perm(self, perm, obj=None):
+        "Does the user have a specific permission?"
+        # Simplest possible answer: Yes, always
+        return True
+
+    def has_module_perms(self, app_label):
+        "Does the user have permissions to view the app `app_label`?"
+        # Simplest possible answer: Yes, always
+        return True
+
+    @property
+    def is_staff(self):
+        "Is the user a member of staff?"
+        # Simplest possible answer: All admins are staff
+        return True
+
     class Meta:
         db_table = 'usuarios'
 

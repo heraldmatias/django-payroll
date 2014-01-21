@@ -1,7 +1,6 @@
 __author__ = 'holivares'
 from inei.planilla.models import Usuarios
 
-
 class EndesBackend(object):
     """
     Authenticates against django.contrib.auth.models.User.
@@ -14,15 +13,11 @@ class EndesBackend(object):
         if username and password:
             try:
                 user = Usuarios.objects.get(cod_usu=username)
-                user.check_password(password)
+                print user.check_password(password)
+                if user.check_password(password):
+                    return user
             except Usuarios.DoesNotExist:
-                # Create a new user. Note that we can set password
-                # to anything, because it won't be checked; the password
-                # from settings.py will.
-                user = Usuarios(cod_usu=username, pass_usu=password)
-                user.is_admin = False
-                user.save()
-            return user
+                pass
         return None
 
     def get_group_permissions(self, user_obj, obj=None):

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block csspage %}
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs" id="breadcrumbs">
+    <ul class="breadcrumb">
+        <li>
+            <i class="icon-home home-icon"></i>
+            <a href="#">Inicio</a>
+            <span class="divider">
+                <i class="icon-angle-right arrow-icon"></i>
+            </span>
+        </li>
+        <li class="active">Panel Principal</li>
+    </ul>
+    <div class="nav-search" id="nav-search">
+        <form class="form-search" />
+            <span class="input-icon">
+                <input type="text" placeholder="Search ..." class="input-small nav-search-input" id="nav-search-input" autocomplete="off" />
+                <i class="icon-search nav-search-icon"></i>
+            </span>
+        </form>
+    </div>
+</div>
+<div class="page-content"></div>
+{% endblock %}
+
+{% block js %}
+{% endblock %}
