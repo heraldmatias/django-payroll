@@ -17,7 +17,8 @@
         <li class="active">Panel Principal</li>
     </ul>
     <div class="nav-search" id="nav-search">
-        <form class="form-search" />
+        <form class="form-search" method="get" />
+            {% csrf_token %}
             <span class="input-icon">
                 <input type="text" placeholder="Search ..." class="input-small nav-search-input" id="nav-search-input" autocomplete="off" />
                 <i class="icon-search nav-search-icon"></i>
@@ -25,8 +26,7 @@
         </form>
     </div>
 </div>
-<div class="page-content"></div>
-{% endblock %}
-
-{% block js %}
+<div class="page-content">
+{% block contenido %}{% endblock %}
+</div>
 {% endblock %}

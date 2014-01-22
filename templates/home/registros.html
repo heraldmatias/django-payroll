@@ -1,0 +1,26 @@
+<table id="tbl_registros" name="tbl_registros"
+       style="border: 1px solid #E5E5E5!important;
+       border-radius: 4px;"
+       class="table table-bordered">
+    <thead>
+        <tr>
+            <th class="tblth">REGISTROS</th>
+            <th class="tblth">NOMBRES Y APELLIDOS</th>
+            <th class="tblth">OBSERVACIÓN</th>
+            {% for concepto in conceptos %}
+                <th class="tblth">{{ concepto.codi_conc_tco.desc_cort_tco }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for f in formset %}
+            <tr id="table2_{{ forloop.counter }}">
+                <td>{{ forloop.counter }}</td>
+                <td>{{ f.codi_empl_per }}</td>
+                <td>{{ f.desc_plan_stp }}</td>
+                <td>{{ f.codi_conc_tco }}</td>
+                <td>{{ f.prueba }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

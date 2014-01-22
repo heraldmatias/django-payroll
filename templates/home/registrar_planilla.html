@@ -1,0 +1,85 @@
+{% extends 'home/index.html' %}
+{% block csspage %}
+    <style type="text/css">
+        .box2 {
+            background: none repeat scroll 0 0 #F5F5F5;
+            bottom: 0;
+            font-family: arial;
+            height: auto;
+            padding: 2px;
+            position: fixed;
+            right: 0;
+            width: auto;
+        }
+        .tblth {
+            line-height: 20px!important;
+        }
+    </style>
+{% endblock %}
+{% block contenido %}
+    <div class="widget-box">
+        <div class="widget-header">
+            <h4>Registro de Planillas</h4>
+        </div>
+
+        <div class="widget-body">
+            <div class="widget-main no-padding" style="overflow: scroll!important;">
+                <form id="form" name="form" method="post">
+                    {% csrf_token %}
+                    <fieldset>
+                        <div class="row-fluid">
+                            <span class="span2">
+                                <label for="id_tomo">Tomo</label>
+                                <select name="tomo" id="id_tomo" onchange="get_folios(this.value);">
+                                    <option value="">SELECCIONE</option>
+                                    {% for tomo in tomos %}
+                                        <option value="{{ tomo.codi_tomo }}">{{ tomo.codi_tomo }}</option>
+                                    {% endfor %}
+                                </select>
+                            </span>
+                            <span class="span2">
+                                <label for="id_folio">Folio</label>
+                                <select name="folio" id="id_folio"></select>
+                            </span>
+                            <span class="span2">
+                                <br>
+                                <input type="button" style="height: 30px; margin-top: 5px;" class="btn btn-small btn-success" value="Consultar" onclick="ver_registros();" />
+                            </span>
+                        </div>
+                        <br>
+                        <div class="row-fluid" id="registros"></div>
+                    </fieldset>
+                    <div class="box2">
+                        <button class="btn btn-small btn-success" onclick="return false;">
+                            Submit
+                            <i class="icon-arrow-right icon-on-right bigger-110"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+    function get_folios(codigo){
+        var url = '{% url 'planillas-get_folios' %}'
+        var $cmb_folio = $('#id_folio');
+        $.post(url, {csrfmiddlewaretoken:'{{ csrf_token }}', tomo:codigo}, function(data){
+            $cmb_folio.html(data);
+        });
+    }
+
+    function ver_registros(){
+        var url = '{% url 'planillas-get-registros' %}'
+        var $cmb_tomo = $('#id_tomo');
+        var $cmb_folio = $('#id_folio');
+        var $div_registro = $('#registros');
+        $.post(url, {csrfmiddlewaretoken:'{{ csrf_token }}', tomo:$cmb_tomo.val(), folio:$cmb_folio.val()}, function(data){
+            $div_registro.html(data);
+        });
+    }
+</script>
+{% endblock %}

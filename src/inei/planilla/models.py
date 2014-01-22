@@ -43,20 +43,10 @@ class Conceptos(models.Model):
     sede_conc_tco = models.CharField(max_length=1, blank=True)
     fec_creac = models.DateTimeField(blank=True, null=True)
     fec_mod = models.DateTimeField(blank=True, null=True)
-    usu_crea = models.CharField(blank=True, null=True, max_length=10)
-    usu_mod = models.CharField(blank=True, null=True, max_length=10)
+    usu_crea_id = models.CharField(blank=True, null=True, max_length=10)
+    usu_mod_id = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'conceptos'
-
-
-class ConceptosFolios(models.Model):
-    id = models.IntegerField(primary_key=True)
-    orden_conc_folio = models.IntegerField()
-    codi_folio = models.CharField(blank=True, null=True, max_length=10)
-    codi_conc_tco = models.CharField(blank=True, null=True, max_length=10)
-    class Meta:
-        db_table = 'conceptos_folios'
-
 
 class ExcelTomo(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -66,8 +56,8 @@ class ExcelTomo(models.Model):
     created_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(blank=True, null=True)
     tomo = models.IntegerField(blank=True, null=True)
-    usu_crea = models.CharField(blank=True, null=True, max_length=10)
-    usu_mod = models.CharField(blank=True, null=True, max_length=10)
+    usu_crea_id = models.CharField(blank=True, null=True, max_length=10)
+    usu_mod_id = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'excel_tomo'
 
@@ -81,10 +71,18 @@ class Folios(models.Model):
     tipo_plan_tpl = models.CharField(blank=True, null=True, max_length=10)
     fec_creac = models.DateTimeField(blank=True, null=True)
     fec_mod = models.DateTimeField(blank=True, null=True)
-    usu_crea = models.CharField(blank=True, null=True, max_length=10)
-    usu_mod = models.CharField(blank=True, null=True, max_length=10)
+    usu_crea_id = models.CharField(blank=True, null=True, max_length=10)
+    usu_mod_id = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'folios'
+
+class ConceptosFolios(models.Model):
+    id = models.IntegerField(primary_key=True)
+    orden_conc_folio = models.IntegerField()
+    codi_folio = models.ForeignKey(Folios, blank=True, null=True, to_field='codi_folio', db_column='codi_folio')
+    codi_conc_tco = models.ForeignKey(Conceptos,blank=True, null=True, to_field='codi_conc_tco',db_column='codi_conc_tco')
+    class Meta:
+        db_table = 'conceptos_folios'
 
 class MaestroPersonal(models.Model):
     codi_empl_per = models.CharField(primary_key=True, max_length=8)
@@ -316,8 +314,8 @@ class Tomos(models.Model):
     desc_tomo = models.TextField(blank=True)
     fec_creac = models.DateTimeField(blank=True, null=True)
     fec_mod = models.DateTimeField(blank=True, null=True)
-    usu_crea = models.CharField(blank=True, null=True, max_length=10)
-    usu_mod = models.CharField(blank=True, null=True, max_length=10)
+    usu_crea_id = models.CharField(blank=True, null=True, max_length=10)
+    usu_mod_id = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'tomos'
 

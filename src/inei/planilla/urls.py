@@ -3,4 +3,7 @@ from django.conf.urls import patterns, url
 
 urlpatterns = patterns('inei.planilla.views',
        url(r'^$', 'get_login', name='planillas-login'),
+       url(r'^registrar-planilla/$', 'get_registrar_planilla', name='planillas-registrar-planilla'),
+       url(r'^get_folios/$', 'get_folios', name='planillas-get_folios'),
+       url(r'^get_registros/$', 'get_registros', name='planillas-get-registros'),
 )
