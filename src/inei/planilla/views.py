@@ -104,8 +104,13 @@ def set_registros(request):
                                                 prefix='cf')
     for form in formset:
         for f in form:
-            print f.value()
-        # sql =  'SELECT fn_planilla (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+            if f.name.startswith('C'):
+                sql =  'SELECT fn_planilla (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+            elif f.name == 'codi_empl_per':
+                empleado = f.value()
+            elif f.name == 'desc_plan_stp':
+                descripcion = f.value()
+
         # periodo = folio.per_folio
         # empleado = data['codi_empl_per']
         # print empleado
