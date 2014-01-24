@@ -12,14 +12,14 @@
             {% endfor %}
         </tr>
     </thead>
+    {{ formset.management_form }}
     <tbody>
         {% for f in formset %}
             <tr id="table2_{{ forloop.counter }}">
-                <td>{{ forloop.counter }}</td>
-                <td>{{ f.codi_empl_per }}</td>
-                <td>{{ f.desc_plan_stp }}</td>
-                <td>{{ f.codi_conc_tco }}</td>
-                <td>{{ f.prueba }}</td>
+            <td>{{ forloop.counter }}</td>
+            {% for field in f %}
+                <td>{{ field }}</td>
+            {% endfor %}
             </tr>
         {% endfor %}
     </tbody>
