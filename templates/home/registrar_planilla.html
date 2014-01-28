@@ -23,11 +23,12 @@
         </div>
 
         <div class="widget-body">
-            <div class="widget-main no-padding" style="overflow: scroll!important;">
+            <div class="widget-main no-padding" style="overflow-x: scroll!important;">
                 <form id="form" name="form" method="post">
                     {% csrf_token %}
-                    <fieldset>
+
                         <div class="row-fluid">
+                            <div class="span12">
                             <span class="span2">
                                 <label for="id_tomo">Tomo</label>
                                 <select name="tomo" id="id_tomo" onchange="get_folios(this.value);">
@@ -45,15 +46,13 @@
                                 <br>
                                 <input type="button" style="height: 30px; margin-top: 5px;" class="btn btn-small btn-success" value="Consultar" onclick="ver_registros();" />
                             </span>
+                            </div>
                         </div>
                         <br>
                         <div class="row-fluid" id="registros"></div>
-                    </fieldset>
+
                     <div class="box2">
-                        <button class="btn btn-small btn-success" onclick="guardar_registros();">
-                            Grabar
-                            <i class="icon-arrow-right icon-on-right bigger-110"></i>
-                        </button>
+                        <input type="button" class="btn btn-small btn-success" onclick="guardar_registros();" value="Grabar">
                     </div>
                 </form>
             </div>
@@ -64,7 +63,16 @@
 
 {% block js %}
 <script type="text/javascript">
-    jQuery.noConflict();
+
+
+    jQuery('#id_folio').on('change', function(e){
+        ver_registros();
+    });
+
+    jQuery('#id_tomo').on('change', function(e){
+        jQuery('#tplanillas').html('');
+        //ver_registros();
+    });
 
     function get_folios(codigo){
         var url = '{% url 'planillas-get_folios' %}'
@@ -82,21 +90,51 @@
         jQuery.post(url, {csrfmiddlewaretoken:'{{ csrf_token }}', tomo:$cmb_tomo.val(), folio:$cmb_folio.val()}, function(data){
             $div_registro.html(data);
             activate_controls();
+            validar_campos();
+            validaTotales();
+        });
+    }
+
+    function validar_campos(){
+        var campos = jQuery('input[type="text"]');
+        jQuery.each(campos, function(k, v){
+           if(jQuery(v).val() === ''){
+               jQuery(v).focus();
+               rpt = false;
+               return false;
+           }
         });
     }
 
     function guardar_registros(){
         var data = jQuery('#form').serializeArray(),
             $cmb_tomo = jQuery('#id_tomo'),
-            $cmb_folio = jQuery('#id_folio'),
-            url = '{% url 'planillas-set-registros' %}';
-        jQuery.post(url, data, function(data){
-            $div_registro.html(data);
+            url = '{% url 'planillas-set-registros' %}',
+            cbfolio = jQuery('#id_folio');
+        var rpt = true;
+        var campos = jQuery('input[type="text"]');
+        jQuery.each(campos, function(k, v){
+           if(jQuery(v).val() === ''){
+               jQuery(v).focus();
+               rpt = false;
+               return false;
+           }
         });
+        if(rpt === false) return false;
+        if(validaTotales() === false) return false;
+        if(confirm('¿Esta seguro que desea modificar este registro?')){
+            jQuery.post(url, data, function(data){
+                if(data['success']){
+                    cbfolio.val(data['data']);
+                    cbfolio.trigger('change');
+                }
+            });
+        }
+        return false;
     }
 
     function loadColumns() {
-        var form = jQuery(jQuery('#tplanillas tbody').data('prototype'));
+        /*var form = jQuery(jQuery('#tplanillas tbody').data('prototype'));
         var collectionColumns = jQuery('#tplanillas thead');
         var columns = jQuery('<tr></tr>');
         var column = null;
@@ -108,7 +146,7 @@
         });
         column = jQuery('<th>REGISTRO</th>');
         columns.prepend(column);
-        collectionColumns.append(columns);
+        collectionColumns.append(columns);*/
     }
     function indexar() {
         var rows = jQuery('#tplanillas tbody').find('tr');
@@ -293,7 +331,7 @@
 
     function validaTotales(){
         var rows = jQuery('#tplanillas tbody').find('tr');
-        var filas = rows.length-2;
+        var filas = rows.length-1;
         var correcto = true, txtRemuneracion = null,
                 txtDescuento = null, txtLiquido=null;
         var totalRemuneracion =0, totalDescuento=0,
@@ -339,8 +377,6 @@
         return correcto;
     }
 
-
-
     function nextRow(fila){
         var nextRow = fila.next();
         if(nextRow.hasClass('fila_totales')){
@@ -363,7 +399,7 @@
         $txt.data('ultimo', true);
     }
 
-    jQuery('form:eq(1)').on('submit', function(e){
+    jQuery('form:eq(0)').on('submit', function(e){
         var rpt = true;
         var campos = jQuery('input[type="text"]');
         jQuery.each(campos, function(k, v){

@@ -12,16 +12,19 @@ class PlanillaHistoricasForm(forms.Form):
     def __init__(self, concepto, *args, **kwargs):
         super(PlanillaHistoricasForm, self).__init__(*args, **kwargs)
         campos = dict()
+        egr = 'border-color: #e9322d; -webkit-box-shadow: 0 0 6px #f8b9b7; -moz-box-shadow: 0 0 6px #f8b9b7; box-shadow: 0 0 6px #f8b9b7;';
+        ing = 'border-color: #2D78E9; -webkit-box-shadow: 0 0 6px #2D78E9; -moz-box-shadow: 0 0 6px #2D78E9; box-shadow: 0 0 6px #2D78E9;';
+        total = 'border-color: rgb(70, 136, 71); -webkit-box-shadow: 0 0 6px rgb(70, 136, 71); -moz-box-shadow: 0 0 6px rgb(70, 136, 71); box-shadow: 0 0 6px rgb(70, 136, 71);';
         for conc in concepto:
             codigo = conc.codi_conc_tco.codi_conc_tco
             descripcion = conc.codi_conc_tco.desc_cort_tco
             tipo = conc.codi_conc_tco.tipo_conc_tco
             clase = 'remuneraciones' if codigo == 'C373' else 'descuentos' if codigo == 'C374' else 'total' if codigo == 'C12' else 'monto'
             attrs = {
-                'class': clase,
+                'class': clase + ' error',
                 'data-title': descripcion,
                 'data-tipo': tipo,
-                'style': 'width:auto;font-size:15px;',
+                'style': 'width:auto;font-size:15px;' + (ing if tipo == '1' else egr if tipo == '2' else total if codigo in ('C373', 'C12', 'C374') else ''),
                 'maxlength': 35,
                 'placeholder': descripcion
             }

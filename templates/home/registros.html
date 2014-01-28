@@ -1,4 +1,4 @@
-<table id="tbl_registros" name="tbl_registros"
+<table id="tplanillas" name="tplanillas"
        style="border: 1px solid #E5E5E5!important;
        border-radius: 4px;"
        class="table table-bordered">
@@ -21,6 +21,8 @@
                 <td>{{ field }}</td>
             {% endfor %}
             </tr>
+        {% empty %}
+            <tr><td colspan="3">No se encontraron registros. Es posible que se trate de un folio de resumen o que el folio no este registrado.</td></tr>
         {% endfor %}
     </tbody>
 </table>

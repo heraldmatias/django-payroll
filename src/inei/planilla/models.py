@@ -61,13 +61,26 @@ class ExcelTomo(models.Model):
     class Meta:
         db_table = 'excel_tomo'
 
+class Tomos(models.Model):
+    codi_tomo = models.IntegerField(primary_key=True)
+    per_tomo = models.CharField(max_length=100)
+    ano_tomo = models.CharField(max_length=30)
+    folios_tomo = models.IntegerField()
+    desc_tomo = models.TextField(blank=True)
+    fec_creac = models.DateTimeField(blank=True, null=True)
+    fec_mod = models.DateTimeField(blank=True, null=True)
+    usu_crea_id = models.CharField(blank=True, null=True, max_length=10)
+    usu_mod_id = models.CharField(blank=True, null=True, max_length=10)
+    class Meta:
+        db_table = 'tomos'
+
 class Folios(models.Model):
     codi_folio = models.IntegerField(primary_key=True)
     num_folio = models.IntegerField()
     per_folio = models.CharField(max_length=100, blank=True)
     reg_folio = models.IntegerField(blank=True, null=True)
     subt_plan_stp = models.CharField(max_length=2, blank=True)
-    codi_tomo = models.CharField(blank=True, null=True, max_length=10)
+    codi_tomo = models.ForeignKey(Tomos, blank=True, null=True, db_column='codi_tomo')
     tipo_plan_tpl = models.CharField(blank=True, null=True, max_length=10)
     fec_creac = models.DateTimeField(blank=True, null=True)
     fec_mod = models.DateTimeField(blank=True, null=True)
@@ -304,20 +317,6 @@ class Subtplanilla(models.Model):
     usu_mod = models.CharField(blank=True, null=True, max_length=10)
     class Meta:
         db_table = 'subtplanilla'
-
-
-class Tomos(models.Model):
-    codi_tomo = models.IntegerField(primary_key=True)
-    per_tomo = models.CharField(max_length=100)
-    ano_tomo = models.CharField(max_length=30)
-    folios_tomo = models.IntegerField()
-    desc_tomo = models.TextField(blank=True)
-    fec_creac = models.DateTimeField(blank=True, null=True)
-    fec_mod = models.DateTimeField(blank=True, null=True)
-    usu_crea_id = models.CharField(blank=True, null=True, max_length=10)
-    usu_mod_id = models.CharField(blank=True, null=True, max_length=10)
-    class Meta:
-        db_table = 'tomos'
 
 class Tplanilla(models.Model):
     tipo_plan_tpl = models.CharField(primary_key=True, max_length=3)

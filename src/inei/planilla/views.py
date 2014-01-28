@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-from twisted.scripts.trial import _initialDebugSetup
 from django.template.context import RequestContext
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponse
 from django.shortcuts import render_to_response
 from django.contrib.auth import authenticate, login, logout
 from models import Tomos, Folios, ConceptosFolios, PlanillaHistoricas
 from forms import PlanillaHistoricasFormSet
+from django.db import connection, transaction
+from simplejson import dumps
 
 
 def get_login(request):
@@ -76,15 +77,21 @@ def get_registros(request):
                     planilla['codigos'] = ','.join(codigos)
                     data.append(planilla)
                     planilla = {}
+                    codigos = []
+                    codigos.append(str(item.id))
                     planilla['num_reg'] = reg
                     planilla['codi_empl_per'] = item.codi_empl_per
                     planilla['desc_plan_stp'] = item.desc_plan_stp
                     concepto = '%s_%s' % (item.codi_conc_tco, item.flag_folio)
                     planilla[concepto] = item.valo_calc_phi
                 if len(data) == reg:
+                    planilla['codigos'] = ','.join(codigos)
                     data.append(planilla)
             else:
-                data = [dict() for r in range(folio.reg_folio)]
+                if folio.reg_folio:
+                    data = [dict() for r in range(folio.reg_folio)]
+                else:
+                    data = []
             formset = PlanillaHistoricasFormSet(initial=data, concepto=conceptos,
                                                 prefix='cf')#queryset=planilla_historicas,
     return render_to_response('home/registros.html', {
@@ -94,7 +101,7 @@ def get_registros(request):
         'formset': formset,
     }, context_instance=RequestContext(request))
 
-
+@transaction.atomic
 def set_registros(request):
     vtomo = request.POST.get('tomo', None)
     vfolio = request.POST.get('folio', None)
@@ -102,73 +109,46 @@ def set_registros(request):
     conceptos = ConceptosFolios.objects.filter(codi_folio=folio).order_by('orden_conc_folio')
     formset = PlanillaHistoricasFormSet(request.POST, concepto=conceptos,
                                                 prefix='cf')
-    for form in formset:
+    conceptos = []
+    ncodigos = 0
+    cursor = connection.cursor()
+
+    for fila, form in enumerate(formset):
         for f in form:
             if f.name.startswith('C'):
-                sql =  'SELECT fn_planilla (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                concepto = f.name.split('_')
+                conceptos.append((concepto[0], concepto[1], f.value()))
             elif f.name == 'codi_empl_per':
                 empleado = f.value()
             elif f.name == 'desc_plan_stp':
                 descripcion = f.value()
+            elif f.name == 'codigos':
+                codigos = f.value()
+        try:
+            codigos = codigos.split(',')
+            ncodigos = len(codigos)-1
+        except:
+            codigos = []
+        #print 'NUMERO DE REGISTRO = %s' % fila
+        for i, concepto in enumerate(conceptos):
+            # print 'SELECT fn_planilla (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' % (codigos[i] if i <= ncodigos else None,
+            #     folio.codi_tomo.ano_tomo, folio.per_folio, concepto[2], folio.tipo_plan_tpl,
+            #     folio.subt_plan_stp, empleado, concepto[0], folio.codi_folio, descripcion,
+            #     concepto[1], fila, request.user.id, request.user.id)
+            cursor.execute('SELECT fn_planilla (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)', (
+                codigos[i] if i <= ncodigos != 0 else None,
+                folio.codi_tomo.ano_tomo, folio.per_folio, concepto[2], folio.tipo_plan_tpl,
+                folio.subt_plan_stp, empleado, concepto[0], folio.codi_folio, descripcion,
+                concepto[1], fila, request.user.id, request.user.id))
+        conceptos = []
 
-        # periodo = folio.per_folio
-        # empleado = data['codi_empl_per']
-        # print empleado
-        # $userid = $this->sc->getToken()->getUser()->getId();
-        #     $conn->beginTransaction();
-        #     $stmt = $conn->prepare(
-        #             'SELECT fn_planilla (:aid, :aano_peri_tpe, :anume_peri_tpe,
-        #                         :avalo_calc_phi, :atipo_plan_tpl, :asubt_plan_stp,
-        #                         :acodi_empl_per, :acodi_conc_tco, :acodi_folio,
-        #                         :adesc_plan_stp, :aflag_folio, :anum_reg,
-        #                         :ausu_crea_id, :ausu_mod_id)'
-        #     );
-        #     $_periodo = $object->getPeriodoFolio();
-        #     $periodo = strlen($_periodo)<2?
-        #             str_pad($_periodo, 2, '0', STR_PAD_LEFT):
-        #             strlen($_periodo)===2?$_periodo:'00';
-        #     foreach ($data as $key1 => $planilla) {
-        #         if ($key1 >= $object->getRegistrosFolio())
-        #             break;
-        #         $reg = $planilla['registro'];
-        #         $dni = $planilla['codiEmplPer'];
-        #         $descripcion = $planilla['descripcion'];
-        #         $codigos = explode(',', $planilla['codigos']);
-        #         unset($planilla['codiEmplPer']);
-        #         unset($planilla['descripcion']);
-        #         unset($planilla['registro']);
-        #         unset($planilla['codigos']);
-        #         $co = 0;
-        #         foreach ($planilla as $key => $valor) {
-        #             $pos = strpos($key, '_');
-        #             $stmt->bindValue('aid', array_key_exists($co, $codigos) ?
-        #                             is_numeric($codigos[$co]) ? $codigos[$co] : null : null);
-        #             $stmt->bindValue('aano_peri_tpe', $object->getTomo()->getAnoTomo());
-        #             $stmt->bindValue('anume_peri_tpe', $periodo);
-        #             $stmt->bindValue('avalo_calc_phi', $valor);
-        #             $stmt->bindValue('atipo_plan_tpl', is_object($object->getTipoPlanTpl()) ? $object->getTipoPlanTpl()->getTipoPlanTpl() : $object->getTipoPlanTpl());
-        #             $stmt->bindValue('asubt_plan_stp', $object->getSubtPlanStp());
-        #             $stmt->bindValue('acodi_empl_per', $dni);
-        #             $stmt->bindValue('acodi_conc_tco', substr($key, 0, $pos));
-        #             $stmt->bindValue('acodi_folio', $object->getCodiFolio());
-        #             $stmt->bindValue('adesc_plan_stp', $descripcion);
-        #             $stmt->bindValue('aflag_folio', substr($key, $pos + 1));
-        #             $stmt->bindValue('anum_reg', $reg);
-        #             $stmt->bindValue('ausu_crea_id', $userid);
-        #             $stmt->bindValue('ausu_mod_id', $userid);
-        #             $stmt->execute();
-        #             $codigos[$co] = -1;
-        #             $co++;
-        #         }
-        #         /*                 * ***************ELIMINAMOS LAS FILAS QUE YA NO
-        #          * SE ENCUENTREN EN LA MATRIZ******************* */
-        #         $q = $this->em->createQuery('delete from
-        #             IneiPayrollBundle:PlanillaHistoricas m where m.id in (:ids)');
-        #         $q->setParameter('ids', $codigos);
-        #         $q->execute();
-        #     }
+    response = HttpResponse(content=dumps({
+        'data': (int(vfolio)+1),
+        'success': True,
+        'error': None}), content_type='application/json')
+    return response
 
-    return render_to_response('home/registros.html', {
-        'conceptos': conceptos,
-        'formset': formset,
-    }, context_instance=RequestContext(request))
+    # return render_to_response('home/registros.html', {
+    #     'conceptos': conceptos,
+    #     'formset': formset,
+    # }, context_instance=RequestContext(request))
