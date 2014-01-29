@@ -89,13 +89,27 @@
         var $cmb_tomo = jQuery('#id_tomo');
         var $cmb_folio = jQuery('#id_folio');
         var $div_registro = jQuery('#registros');
-        jQuery.post(url, {csrfmiddlewaretoken:'{{ csrf_token }}', tomo:$cmb_tomo.val(), folio:$cmb_folio.val()}, function(data){
+        var data = {
+            csrfmiddlewaretoken:'{{ csrf_token }}',
+            tomo:$cmb_tomo.val(),
+            folio:$cmb_folio.val()
+        }
+        var oOptions = {
+            type: "POST",
+            url: url,
+            data: data,
+            dataType: 'html',
+            async: true,
+            beforeSend : function(data, textStatus, jqXHR) {
+                $div_registro.html('Cargando...');
+            }
+        };
+        var posting = jQuery.ajax(oOptions);
+        posting.done(function(data, textStatus, jqXHR) {
             $div_registro.html(data);
-            activate_controls();
-            validar_campos();
-            validaTotales();
-            jQuery('.nombre:eq(0)').focus();
-            jQuery('input, textarea').placeholder();
+        })
+        .fail(function(data, textStatus, jqXHR) {
+            $div_registro.html(textStatus);
         });
     }
 
@@ -114,7 +128,8 @@
         var data = jQuery('#form').serializeArray(),
             $cmb_tomo = jQuery('#id_tomo'),
             url = '{% url 'planillas-set-registros' %}',
-            cbfolio = jQuery('#id_folio');
+            cbfolio = jQuery('#id_folio'),
+            $div_registro = jQuery('#registros');
         var rpt = true;
         var campos = jQuery('input[type="text"]');
         jQuery.each(campos, function(k, v){
@@ -127,11 +142,25 @@
         if(rpt === false) return false;
         if(validaTotales() === false) return false;
         if(confirm('¿Esta seguro que desea modificar este registro?')){
-            jQuery.post(url, data, function(data){
+            var oOptions = {
+                type: "POST",
+                url: url,
+                data: data,
+                dataType: 'json',
+                async: true,
+                beforeSend : function(data, textStatus, jqXHR) {
+                    $div_registro.html('Guardando... Espere por favor.');
+                }
+            };
+            var posting = jQuery.ajax(oOptions);
+            posting.done(function(data, textStatus, jqXHR) {
                 if(data['success']){
                     cbfolio.val(data['data']);
                     cbfolio.trigger('change');
                 }
+            })
+            .fail(function(data, textStatus, jqXHR) {
+                $div_registro.html(textStatus);
             });
         }
         return false;
