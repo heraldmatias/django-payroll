@@ -6,8 +6,8 @@ from django.utils import timezone
 class Asignacion(models.Model):
     fe_asignacion = models.DateTimeField(blank=True, null=True)
     fe_modifica_asig = models.DateTimeField(blank=True, null=True)
-    co_asignado = models.CharField(max_length=10)
-    co_tomo = models.CharField(max_length=10)
+    co_asignado = models.IntegerField(max_length=10)
+    co_tomo = models.IntegerField(max_length=10)
     co_asignador = models.CharField(max_length=10)
     co_modificador = models.CharField(blank=True, null=True, max_length=10)
     class Meta:

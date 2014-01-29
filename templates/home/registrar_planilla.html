@@ -34,7 +34,7 @@
                                 <select name="tomo" id="id_tomo" onchange="get_folios(this.value);">
                                     <option value="">SELECCIONE</option>
                                     {% for tomo in tomos %}
-                                        <option value="{{ tomo.codi_tomo }}">{{ tomo.codi_tomo }}</option>
+                                        <option value="{{ tomo.0 }}">{{ tomo.0 }}</option>
                                     {% endfor %}
                                 </select>
                             </span>

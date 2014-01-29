@@ -5,6 +5,7 @@ from django.template.context import RequestContext
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponse
 from django.shortcuts import render_to_response
 from django.contrib.auth import authenticate, login, logout
+from inei.planilla.models import Asignacion
 from models import Tomos, Folios, ConceptosFolios, PlanillaHistoricas
 from forms import PlanillaHistoricasFormSet
 from django.db import connection, transaction
@@ -38,7 +39,7 @@ def get_logout(request):
 
 @login_required()
 def get_registrar_planilla(request):
-    tomos = Tomos.objects.all().order_by('codi_tomo')
+    tomos = Asignacion.objects.filter(co_asignado=request.user.pk).values_list('co_tomo').order_by('co_tomo')
 
     return render_to_response('home/registrar_planilla.html', {
         'tomos': tomos,
