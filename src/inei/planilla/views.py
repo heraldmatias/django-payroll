@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import datetime
+from django.contrib.auth.decorators import login_required
 from django.template.context import RequestContext
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponse
 from django.shortcuts import render_to_response
@@ -6,7 +8,8 @@ from django.contrib.auth import authenticate, login, logout
 from models import Tomos, Folios, ConceptosFolios, PlanillaHistoricas
 from forms import PlanillaHistoricasFormSet
 from django.db import connection, transaction
-from simplejson import dumps
+import simplejson  as json
+from os import path, remove
 
 
 def get_login(request):
@@ -27,6 +30,7 @@ def get_login(request):
         return render_to_response('home/index.html', {}, context_instance=RequestContext(request))
 
 
+@login_required()
 def get_registrar_planilla(request):
     tomos = Tomos.objects.all().order_by('codi_tomo')
 
@@ -35,6 +39,7 @@ def get_registrar_planilla(request):
     }, context_instance=RequestContext(request))
 
 
+@login_required()
 def get_folios(request):
     html = ''
     if request.method == 'POST':
@@ -46,10 +51,12 @@ def get_folios(request):
     return HttpResponse(html)
 
 
+@login_required()
 def get_registros(request):
     tomo = None
     folio = None
     conceptos = None
+    estado = None
     if request.method == 'POST':
         vtomo = request.POST.get('tomo', None)
         vfolio = request.POST.get('folio', None)
@@ -87,19 +94,33 @@ def get_registros(request):
                 if len(data) == reg:
                     planilla['codigos'] = ','.join(codigos)
                     data.append(planilla)
+                estado = ('alert alert-success', 'Folio digitado')
             else:
                 if folio.reg_folio:
-                    data = [dict() for r in range(folio.reg_folio)]
+                    f = get_file(request, False)
+                    if f is None:
+                        data = [dict() for r in range(folio.reg_folio)]
+                        estado = ('alert alert-info', 'Folio por digitar')
+                    else:
+                        data = json.loads(f.read())
+                        f.close()
+                        estado = ('alert alert-error', 'Folio no guardado')
                 else:
                     data = []
-            formset = PlanillaHistoricasFormSet(initial=data, concepto=conceptos,
-                                                prefix='cf')#queryset=planilla_historicas,
+            if isinstance(data, dict):
+                formset = PlanillaHistoricasFormSet(data=data, concepto=conceptos,
+                                                    prefix='cf')
+            else:
+                formset = PlanillaHistoricasFormSet(initial=data, concepto=conceptos,
+                                                    prefix='cf')
     return render_to_response('home/registros.html', {
         'tomo': tomo,
         'folio': folio,
+        'estado': estado,
         'conceptos': conceptos,
         'formset': formset,
     }, context_instance=RequestContext(request))
+
 
 @transaction.atomic
 def set_registros(request):
@@ -108,7 +129,7 @@ def set_registros(request):
     folio = Folios.objects.get(num_folio=vfolio, codi_tomo=vtomo)
     conceptos = ConceptosFolios.objects.filter(codi_folio=folio).order_by('orden_conc_folio')
     formset = PlanillaHistoricasFormSet(request.POST, concepto=conceptos,
-                                                prefix='cf')
+                                        prefix='cf')
     conceptos = []
     ncodigos = 0
     cursor = connection.cursor()
@@ -126,29 +147,44 @@ def set_registros(request):
                 codigos = f.value()
         try:
             codigos = codigos.split(',')
-            ncodigos = len(codigos)-1
+            ncodigos = len(codigos) - 1
         except:
             codigos = []
-        #print 'NUMERO DE REGISTRO = %s' % fila
         for i, concepto in enumerate(conceptos):
-            # print 'SELECT fn_planilla (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' % (codigos[i] if i <= ncodigos else None,
-            #     folio.codi_tomo.ano_tomo, folio.per_folio, concepto[2], folio.tipo_plan_tpl,
-            #     folio.subt_plan_stp, empleado, concepto[0], folio.codi_folio, descripcion,
-            #     concepto[1], fila, request.user.id, request.user.id)
             cursor.execute('SELECT fn_planilla (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)', (
                 codigos[i] if i <= ncodigos != 0 else None,
                 folio.codi_tomo.ano_tomo, folio.per_folio, concepto[2], folio.tipo_plan_tpl,
                 folio.subt_plan_stp, empleado, concepto[0], folio.codi_folio, descripcion,
                 concepto[1], fila, request.user.id, request.user.id))
         conceptos = []
-
-    response = HttpResponse(content=dumps({
-        'data': (int(vfolio)+1),
+    filename = 'planilla_%s_%s_%s.json' % (vtomo, vfolio, request.user.pk)
+    remove(filename)
+    response = HttpResponse(content=json.dumps({
+        'data': (int(vfolio) + 1),
         'success': True,
         'error': None}), content_type='application/json')
     return response
 
-    # return render_to_response('home/registros.html', {
-    #     'conceptos': conceptos,
-    #     'formset': formset,
-    # }, context_instance=RequestContext(request))
+
+def autoguardado(request):
+    data = request.POST
+    tomo = request.POST.get('tomo', None)
+    folio = request.POST.get('folio', None)
+    f = get_file(request)
+    f.write(json.dumps(data))
+    f.close()
+    response = HttpResponse(
+        content='El contenido se guardo por ultima vez a las %s' % datetime.datetime.today().strftime('%D %T'))
+    return response
+
+
+def get_file(request, create=True):
+    tomo = request.POST.get('tomo', None)
+    folio = request.POST.get('folio', None)
+    filename = 'planilla_%s_%s_%s.json' % (tomo, folio, request.user.pk)
+    _file = None
+    if create:
+        _file = open(filename, 'w')
+    elif path.exists(filename):
+        _file = open(filename, 'r')
+    return _file

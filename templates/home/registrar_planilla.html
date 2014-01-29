@@ -48,6 +48,7 @@
                             </span>
                             </div>
                         </div>
+                        <div id="feedback"></div>
                         <br>
                         <div class="row-fluid" id="registros"></div>
 
@@ -62,6 +63,7 @@
 {% endblock %}
 
 {% block js %}
+<script src="{{ STATIC_URL }}assets/js/prototype.js"></script>
 <script type="text/javascript">
 
 
@@ -92,6 +94,8 @@
             activate_controls();
             validar_campos();
             validaTotales();
+            jQuery('.nombre:eq(0)').focus();
+            jQuery('input, textarea').placeholder();
         });
     }
 
@@ -133,22 +137,7 @@
         return false;
     }
 
-    function loadColumns() {
-        /*var form = jQuery(jQuery('#tplanillas tbody').data('prototype'));
-        var collectionColumns = jQuery('#tplanillas thead');
-        var columns = jQuery('<tr></tr>');
-        var column = null;
-        jQuery.each(form.find('td'), function(index, field) {
-            field = jQuery(field);
-            column = jQuery('<th id="col'+index+'"></th>');
-            column.html(field.find('*').data('title'));
-            columns.append(column);
-        });
-        column = jQuery('<th>REGISTRO</th>');
-        columns.prepend(column);
-        collectionColumns.append(columns);*/
-    }
-    function indexar() {
+    /*function indexar() {
         var rows = jQuery('#tplanillas tbody').find('tr');
         jQuery.each(rows, function(i, v){
             var reg = jQuery(v).find('input[name*="registro"]');
@@ -156,7 +145,8 @@
             var $td = jQuery('<td class="column-item">'+(i+1)+'</td>');
             jQuery(v).prepend($td);
         });
-    }
+    }*/
+
     function resumen(){
         var cols = jQuery('#tplanillas tbody tr:eq(0) td').length;
         var fresumen= jQuery('<tr class="fila_totales"></tr>');
@@ -185,13 +175,6 @@
             }
         });*/
     }
-
-    jQuery(document).ready(function() {
-        loadColumns();
-        indexar();
-        jQuery('.nombre:eq(0)').focus();
-        jQuery('input, textarea').placeholder();
-    });
 
     function activate_controls(){
         jQuery('.nombre').on('keypress', function(e){
@@ -305,7 +288,6 @@
                 }
             }
         });
-
     }
 
 
@@ -412,6 +394,33 @@
         if(rpt === false) return false;
         if(validaTotales() === false) return false;
         return confirm('¿Esta seguro que desea modificar este registro?');
+    });
+
+    /**
+     * AUTOGUARDADO
+     */
+    function sendForm(){
+        var data = Form.serialize("form");
+        var oOptions = {
+            method: "POST",
+            parameters: data,
+            asynchronous: true,
+            onFailure: function (oXHR) {
+                $('feedback').update(oXHR.statusText);
+            },
+            onLoading: function (oXHR) {
+                $('feedback').update('Guardando ...');
+            },
+            onSuccess: function(oXHR) {
+               $('feedback').update(oXHR.responseText);
+               data = Form.serialize("form");
+            }
+        };
+        new Ajax.Updater('feedback', "{% url 'planillas-autosave-registros' %}", oOptions);
+    }
+
+    document.observe('dom:loaded', function() {
+        new Form.Observer('form', 30, sendForm);
     });
 
 </script>
