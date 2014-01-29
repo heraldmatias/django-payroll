@@ -164,7 +164,8 @@ def set_registros(request):
                 concepto[1], fila, request.user.id, request.user.id))
         conceptos = []
     filename = get_filename(request)
-    remove(filename)
+    if path.exists(filename):
+        remove(filename)
     response = HttpResponse(content=json.dumps({
         'data': (int(vfolio) + 1),
         'success': True,
