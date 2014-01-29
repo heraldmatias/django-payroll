@@ -10,7 +10,7 @@ from forms import PlanillaHistoricasFormSet
 from django.db import connection, transaction
 import simplejson  as json
 from os import path, remove
-
+from project.settings import BASE_DIR
 
 def get_login(request):
     if not request.user.is_authenticated():
@@ -157,7 +157,7 @@ def set_registros(request):
                 folio.subt_plan_stp, empleado, concepto[0], folio.codi_folio, descripcion,
                 concepto[1], fila, request.user.id, request.user.id))
         conceptos = []
-    filename = 'planilla_%s_%s_%s.json' % (vtomo, vfolio, request.user.pk)
+    filename = get_filename(request)
     remove(filename)
     response = HttpResponse(content=json.dumps({
         'data': (int(vfolio) + 1),
@@ -168,8 +168,6 @@ def set_registros(request):
 
 def autoguardado(request):
     data = request.POST
-    tomo = request.POST.get('tomo', None)
-    folio = request.POST.get('folio', None)
     f = get_file(request)
     f.write(json.dumps(data))
     f.close()
@@ -178,10 +176,14 @@ def autoguardado(request):
     return response
 
 
-def get_file(request, create=True):
+def get_filename(request):
     tomo = request.POST.get('tomo', None)
     folio = request.POST.get('folio', None)
-    filename = 'planillas/planilla_%s_%s_%s.json' % (tomo, folio, request.user.pk)
+    return '%s/planillas/planilla_%s_%s_%s.json' % (BASE_DIR, tomo, folio, request.user.pk)
+
+
+def get_file(request, create=True):
+    filename = get_filename(request)
     _file = None
     if create:
         _file = open(filename, 'w')
