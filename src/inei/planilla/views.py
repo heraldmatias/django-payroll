@@ -12,6 +12,7 @@ import simplejson  as json
 from os import path, remove
 from project.settings import BASE_DIR
 
+
 def get_login(request):
     if not request.user.is_authenticated():
         if request.method == 'POST':
@@ -23,11 +24,16 @@ def get_login(request):
 
             if user is not None:
                 login(request, user)
-                return render_to_response('home/index.html', {}, context_instance=RequestContext(request))
+                return HttpResponseRedirect('/registrar-planilla/')
 
         return render_to_response('home/login.html', {}, context_instance=RequestContext(request))
     else:
         return render_to_response('home/index.html', {}, context_instance=RequestContext(request))
+
+
+def get_logout(request):
+    logout(request)
+    return HttpResponseRedirect('/')
 
 
 @login_required()
