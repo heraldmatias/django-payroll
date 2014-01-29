@@ -181,7 +181,7 @@ def autoguardado(request):
 def get_file(request, create=True):
     tomo = request.POST.get('tomo', None)
     folio = request.POST.get('folio', None)
-    filename = 'planilla_%s_%s_%s.json' % (tomo, folio, request.user.pk)
+    filename = 'planillas/planilla_%s_%s_%s.json' % (tomo, folio, request.user.pk)
     _file = None
     if create:
         _file = open(filename, 'w')
