@@ -385,8 +385,8 @@
 
     function nextRow(fila){
         var nextRow = fila.next();
-        if(nextRow.hasClass('fila_totales')){
-            jQuery('form:eq(1)').submit();
+        if(nextRow.length===0){
+            guardar_registros()
         }else{
             var campo_siguiente = nextRow.find('input[type="text"]:eq(0)');
             campo_siguiente.focus();
